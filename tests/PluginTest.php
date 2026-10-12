@@ -147,6 +147,23 @@ class PluginTest extends TestCase {
 	}
 
 	/**
+	 * Version wildcards still collapse; directory prefixes are left alone.
+	 *
+	 * @return void
+	 */
+	public function test_url_collapse_includes_version_wildcards() {
+		$urls = array( 'https://example.com/wp-content/litespeed/*' );
+		for ( $i = 0; $i < 13; $i++ ) {
+			$urls[] = 'https://example.com/wp-content/uploads/2026/10/file-' . $i . '.jpg*';
+		}
+
+		$collapsed = bpl_collapse_urls( $urls, 12 );
+		$this->assertContains( 'https://example.com/wp-content/uploads/2026/10/*', $collapsed );
+		$this->assertContains( 'https://example.com/wp-content/litespeed/*', $collapsed );
+		$this->assertCount( 2, $collapsed );
+	}
+
+	/**
 	 * Attachment sizes stay beside the original file.
 	 *
 	 * @return void

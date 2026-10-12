@@ -245,12 +245,13 @@ function bpl_collapse_urls( array $urls, $limit = 12 ) {
 	$out    = array();
 
 	foreach ( array_keys( $clean ) as $url ) {
-		if ( false !== strpos( $url, '*' ) ) {
+		$base = '*' === substr( $url, -1 ) && '/*' !== substr( $url, -2 ) ? substr( $url, 0, -1 ) : $url;
+		if ( false !== strpos( $base, '*' ) ) {
 			$out[] = $url;
 			continue;
 		}
 
-		$parts = parse_url( $url );
+		$parts = parse_url( $base );
 		if ( ! is_array( $parts ) || empty( $parts['host'] ) || empty( $parts['path'] ) ) {
 			$out[] = $url;
 			continue;

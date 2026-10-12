@@ -270,6 +270,7 @@ function bpl_purge_boot() {
 	add_action( 'litespeed_purged_front', 'bpl_on_purged_link' );
 	add_action( 'litespeed_purged_single', 'bpl_on_purged_single' );
 	add_action( 'delete_attachment', 'bpl_on_delete_attachment' );
+	add_action( 'add_attachment', 'bpl_on_add_attachment' );
 	add_filter( 'wp_update_attachment_metadata', 'bpl_on_attachment_metadata', 10, 2 );
 	add_action( 'elementor/document/after_save', 'bpl_on_elementor_save', 10, 2 );
 	add_action( 'customize_save_after', 'bpl_on_customizer' );
@@ -395,6 +396,31 @@ function bpl_on_delete_attachment( $post_id ) {
 }
 
 /**
+ * Attachments created during this request.
+ *
+ * @param int $post_id Attachment ID to add, or 0 to read.
+ * @return array<int, bool>
+ */
+function bpl_new_attachments( $post_id = 0 ) {
+	static $ids = array();
+	if ( $post_id > 0 ) {
+		$ids[ $post_id ] = true;
+	}
+
+	return $ids;
+}
+
+/**
+ * Remember a new upload so its first metadata writes are not purged.
+ *
+ * @param int $post_id Attachment ID.
+ * @return void
+ */
+function bpl_on_add_attachment( $post_id ) {
+	bpl_new_attachments( (int) $post_id );
+}
+
+/**
  * Queue a replaced attachment and its sizes.
  *
  * @param mixed $data    Attachment metadata.
@@ -402,6 +428,11 @@ function bpl_on_delete_attachment( $post_id ) {
  * @return mixed Unchanged metadata.
  */
 function bpl_on_attachment_metadata( $data, $post_id ) {
+	$new = bpl_new_attachments();
+	if ( isset( $new[ (int) $post_id ] ) ) {
+		return $data;
+	}
+
 	$urls = bpl_attachment_urls_for_post( (int) $post_id );
 	if ( is_array( $data ) && ! empty( $data['sizes'] ) && is_array( $data['sizes'] ) ) {
 		$url = wp_get_attachment_url( (int) $post_id );
@@ -491,7 +522,7 @@ function bpl_on_elementor_save( $document, $data = null ) {
 			return;
 		}
 		bpl_mark_zone( 'elementor_library' );
-		do_action( 'litespeed_purge_all', 'Bunny Purge for LiteSpeed - Elementor template' );
+		do_action( 'litespeed_purge_all', 'Bunny Sync for LiteSpeed - Elementor template' );
 		return;
 	}
 
@@ -519,7 +550,7 @@ function bpl_on_customizer() {
 	}
 
 	bpl_mark_zone( 'customize_save_after' );
-	do_action( 'litespeed_purge_all', 'Bunny Purge for LiteSpeed - Customizer' );
+	do_action( 'litespeed_purge_all', 'Bunny Sync for LiteSpeed - Customizer' );
 }
 
 /**
@@ -555,7 +586,7 @@ function bpl_on_upgrade( $upgrader, $hook_extra ) {
 	}
 
 	bpl_mark_zone( 'upgrader_process_complete' );
-	do_action( 'litespeed_purge_all', 'Bunny Purge for LiteSpeed - update' );
+	do_action( 'litespeed_purge_all', 'Bunny Sync for LiteSpeed - update' );
 }
 
 /**

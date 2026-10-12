@@ -6,7 +6,7 @@ Bunny sits in front of the site address. LiteSpeed clears its own copy with a he
 
 ## Install
 
-Download `bunny-sync-for-litespeed-1.0.0.zip` from the [1.0.0 release](https://github.com/paramedicspecialist/bunny-sync-for-litespeed/releases/tag/v1.0.0). In WordPress, open Plugins → Add New → Upload Plugin and choose that zip.
+Download `bunny-sync-for-litespeed-1.0.1.zip` from the [latest release](https://github.com/paramedicspecialist/bunny-sync-for-litespeed/releases/latest). In WordPress, open Plugins → Add New → Upload Plugin and choose that zip.
 
 Then open Settings → Bunny Sync and enter the pull zone ID and API key.
 

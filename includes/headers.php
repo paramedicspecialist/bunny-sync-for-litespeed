@@ -173,7 +173,27 @@ function bpl_should_emit_cdn_tag( $is_logged_in, $is_admin, $is_preview, $donotc
  * @return void
  */
 function bpl_headers_boot() {
-	add_action( 'send_headers', 'bpl_send_cdn_tag', PHP_INT_MAX );
+	if ( is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+		return;
+	}
+
+	// Must start before LiteSpeed's own buffer (after_setup_theme) so this callback runs after LiteSpeed sets its headers.
+	ob_start( 'bpl_cdn_tag_buffer' );
+}
+
+/**
+ * Output buffer callback that adds CDN-Tag once the page is complete.
+ *
+ * @param string $buffer Page output.
+ * @param int    $phase  Output handler phase flags.
+ * @return string Unchanged output.
+ */
+function bpl_cdn_tag_buffer( $buffer, $phase = 0 ) {
+	if ( $phase & PHP_OUTPUT_HANDLER_FINAL ) {
+		bpl_send_cdn_tag();
+	}
+
+	return $buffer;
 }
 
 /**

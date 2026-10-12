@@ -4,7 +4,7 @@ Tags: bunny, litespeed, cache, purge
 Requires at least: 6.8
 Tested up to: 7.1.3
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,7 +63,18 @@ No. The whole pull zone is cleared when LiteSpeed itself sends a purge-all tag, 
 
 The newest 50 rows: time, kind, trigger, count, HTTP status, and a short reason or path. The API key and the Bunny response body are not stored.
 
+== Upgrade Notice ==
+
+= 1.0.1 =
+Page tags now reach Bunny. After updating, run LiteSpeed Cache → Purge All once so cached pages are rebuilt with tags.
+
 == Changelog ==
+
+= 1.0.1 =
+* Fixed: the CDN-Tag header was never sent because LiteSpeed adds its cache headers after WordPress's send_headers hook. Tag purges matched nothing at Bunny.
+* Fixed: a new media upload no longer purges Bunny for files it has never cached.
+* Fixed: many versioned file URLs in one folder now collapse into one folder purge.
+* Text domain and settings page slug now match the plugin folder, bunny-sync-for-litespeed.
 
 = 1.0.0 =
 * First release.

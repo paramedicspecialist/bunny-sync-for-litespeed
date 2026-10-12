@@ -1,5 +1,5 @@
 .phpunit.cache
-.phpunit.cache
 .phpunit.result.cache
 vendor/
+.cursor/
 *.zip
