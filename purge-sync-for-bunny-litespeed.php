@@ -2,14 +2,14 @@
 /**
  * Plugin Name:       Purge Sync for Bunny and LiteSpeed
  * Description:       Clears Bunny when LiteSpeed Cache clears a page or the whole site.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Requires at least: 6.8
  * Requires PHP:      7.4
  * Tested up to:      7.1.3
  * Author:            Darkhorse
  * Author URI:        https://github.com/paramedicspecialist
- * License:           GPLv2 or later
- * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * License:           GPLv3 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain:       purge-sync-for-bunny-litespeed
  *
  * @package PurgeSyncBunnyLiteSpeed
@@ -28,7 +28,7 @@ if ( defined( 'BPL_VERSION' ) ) {
 
 add_filter( 'option_active_plugins', 'bpl_hide_legacy_plugin' );
 
-define( 'BPL_VERSION', '1.1.0' );
+define( 'BPL_VERSION', '1.1.1' );
 define( 'BPL_FILE', __FILE__ );
 define( 'BPL_DIR', __DIR__ );
 

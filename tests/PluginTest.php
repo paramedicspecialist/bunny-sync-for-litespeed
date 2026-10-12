@@ -308,4 +308,63 @@ class PluginTest extends TestCase {
 		$this->assertSame( '{"CacheTag":"* abc_Po.5 *"}', bpl_cache_tag_body( 'abc_Po.5' ) );
 		$this->assertSame( '', bpl_cache_tag_body( "bad tag\n" ) );
 	}
+
+	/**
+	 * A non-default port stays on the public address. Default ports do not.
+	 *
+	 * @return void
+	 */
+	public function test_site_page_url_keeps_a_non_default_port() {
+		$this->assertSame(
+			'http://127.0.0.1:8088/about/',
+			bpl_site_page_url( '/about/', 'http://127.0.0.1:8088' )
+		);
+		$this->assertSame(
+			'https://example.com/about/',
+			bpl_site_page_url( '/about/', 'https://example.com:443' )
+		);
+		$this->assertSame(
+			'http://127.0.0.1:8088/wp-content/uploads/a.jpg',
+			bpl_purge_file_target( 'http://127.0.0.1:8088/wp-content/uploads/a.jpg', 'acceleration', '', false )
+		);
+	}
+
+	/**
+	 * Exact purges ask Bunny not to expand a trailing slash into a prefix.
+	 *
+	 * @return void
+	 */
+	public function test_exact_page_purge_sets_exact_path() {
+		$exact = bpl_purge_request_url( 'http://127.0.0.1:8088/', 'url' );
+		$this->assertStringContainsString( 'exactPath=true', $exact );
+		$this->assertStringContainsString( rawurlencode( 'http://127.0.0.1:8088/' ), $exact );
+
+		$prefix = bpl_purge_request_url( 'http://127.0.0.1:8088/wp-content/litespeed/*', 'prefix' );
+		$this->assertStringNotContainsString( 'exactPath=', $prefix );
+	}
+
+	/**
+	 * Exact and prefix calls use Bunny's separate limits.
+	 *
+	 * @return void
+	 */
+	public function test_rate_batch_uses_bunny_limits() {
+		$this->assertSame( 'allow', bpl_rate_batch_decision( 0, 0, 11, 0 ) );
+		$this->assertSame( 'collapse', bpl_rate_batch_decision( 0, 19, 0, 5 ) );
+		$this->assertSame( 'block', bpl_rate_batch_decision( 120, 0, 1, 0 ) );
+		$this->assertSame( 'block', bpl_rate_batch_decision( 0, 20, 0, 1 ) );
+		$this->assertSame( 'skip', bpl_rate_batch_decision( 0, 0, 0, 0 ) );
+
+		$budget = bpl_purge_call_budget(
+			array(
+				'zone' => false,
+				'tags' => array( 'a', 'b' ),
+				'urls' => array( 'https://example.com/about/', 'https://example.com/wp-content/*' ),
+			)
+		);
+		$this->assertSame( 3, $budget['exact'] );
+		$this->assertSame( 1, $budget['prefix'] );
+		$this->assertSame( 1, bpl_observed_status( 0 ) );
+		$this->assertSame( 'failed', bpl_purge_notice_code( false, false, true, bpl_observed_status( 0 ) ) );
+	}
 }

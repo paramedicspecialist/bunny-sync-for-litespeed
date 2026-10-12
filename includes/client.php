@@ -65,7 +65,8 @@ function bpl_site_page_url( $url, $home ) {
 	if ( 'http' !== $scheme && 'https' !== $scheme ) {
 		$scheme = 'https';
 	}
-	$host = strtolower( $home_parts['host'] );
+	$port = isset( $home_parts['port'] ) ? (int) $home_parts['port'] : 0;
+	$host = bpl_host_with_port( $home_parts['host'], $scheme, $port );
 
 	if ( '/' === $url[0] ) {
 		$path = $url;
@@ -111,6 +112,50 @@ function bpl_host_from_url( $url ) {
 	}
 
 	return strtolower( $parts['host'] );
+}
+
+/**
+ * Host, plus a non-default port, for a purge address.
+ *
+ * @param string $host   Hostname.
+ * @param string $scheme http or https.
+ * @param int    $port   Port from parse_url(), or 0.
+ * @return string
+ */
+function bpl_host_with_port( $host, $scheme, $port ) {
+	$host = strtolower( (string) $host );
+	$port = (int) $port;
+	if ( $port < 1 ) {
+		return $host;
+	}
+
+	$default = ( 'https' === $scheme ) ? 443 : 80;
+	if ( $port === $default ) {
+		return $host;
+	}
+
+	return $host . ':' . $port;
+}
+
+/**
+ * Bunny purge-URL endpoint for one prepared address.
+ *
+ * Exact page and file purges set exactPath so a trailing slash stays that
+ * one address. Bunny otherwise treats a trailing slash as a path prefix.
+ * The flag applies when the pull zone keeps query strings in the cache key.
+ * When query strings are ignored, Bunny does not expand the slash.
+ *
+ * @param string $target Prepared public URL.
+ * @param string $kind   url or prefix.
+ * @return string
+ */
+function bpl_purge_request_url( $target, $kind ) {
+	$request = 'https://api.bunny.net/purge?async=true&url=' . rawurlencode( (string) $target );
+	if ( 'url' === $kind ) {
+		$request .= '&exactPath=true';
+	}
+
+	return $request;
 }
 
 /**
@@ -177,13 +222,16 @@ function bpl_purge_file_target( $url, $mode, $cdn_hostname, $vary_versions ) {
 		return '';
 	}
 
+	$port = isset( $parts['port'] ) ? (int) $parts['port'] : 0;
 	$host = strtolower( $parts['host'] );
 	if ( 'rewrite' === $mode ) {
 		$cdn_hostname = bpl_sanitize_hostname( $cdn_hostname );
 		if ( '' !== $cdn_hostname ) {
 			$host = $cdn_hostname;
+			$port = 0;
 		}
 	}
+	$host = bpl_host_with_port( $host, $scheme, $port );
 
 	$path = isset( $parts['path'] ) ? (string) $parts['path'] : '/';
 	if ( false !== strpos( $path, '..' ) || false !== strpos( $path, '\\' ) || false !== strpos( $path, "\n" ) || false !== strpos( $path, "\r" ) ) {
@@ -257,9 +305,10 @@ function bpl_collapse_urls( array $urls, $limit = 12 ) {
 			continue;
 		}
 
-		$scheme = isset( $parts['scheme'] ) && is_string( $parts['scheme'] ) ? $parts['scheme'] : 'https';
-		$dir    = rtrim( str_replace( '\\', '/', dirname( (string) $parts['path'] ) ), '/' );
-		$key    = $scheme . '://' . $parts['host'] . $dir;
+		$scheme    = isset( $parts['scheme'] ) && is_string( $parts['scheme'] ) ? $parts['scheme'] : 'https';
+		$dir       = rtrim( str_replace( '\\', '/', dirname( (string) $parts['path'] ) ), '/' );
+		$authority = bpl_host_with_port( (string) $parts['host'], $scheme, isset( $parts['port'] ) ? (int) $parts['port'] : 0 );
+		$key       = $scheme . '://' . $authority . $dir;
 		if ( ! isset( $groups[ $key ] ) ) {
 			$groups[ $key ] = array();
 		}
@@ -293,8 +342,9 @@ function bpl_attachment_variant_urls( $original_url, array $size_files ) {
 	}
 
 	$scheme = isset( $parts['scheme'] ) ? (string) $parts['scheme'] : 'https';
+	$host   = bpl_host_with_port( (string) $parts['host'], $scheme, isset( $parts['port'] ) ? (int) $parts['port'] : 0 );
 	$dir    = rtrim( str_replace( '\\', '/', dirname( (string) $parts['path'] ) ), '/' );
-	$urls   = array( $scheme . '://' . $parts['host'] . $parts['path'] );
+	$urls   = array( $scheme . '://' . $host . $parts['path'] );
 
 	foreach ( $size_files as $file ) {
 		$file = str_replace( '\\', '/', (string) $file );
@@ -304,7 +354,7 @@ function bpl_attachment_variant_urls( $original_url, array $size_files ) {
 		if ( 1 !== preg_match( '/^[A-Za-z0-9._-]+$/', $file ) ) {
 			continue;
 		}
-		$urls[] = $scheme . '://' . $parts['host'] . $dir . '/' . $file;
+		$urls[] = $scheme . '://' . $host . $dir . '/' . $file;
 	}
 
 	return array_values( array_unique( $urls ) );

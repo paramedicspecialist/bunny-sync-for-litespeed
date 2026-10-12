@@ -211,25 +211,112 @@ function bpl_queue_file( $url, $trigger ) {
 }
 
 /**
- * Calls already counted this UTC minute.
+ * Calls already counted this minute for one Bunny purge type.
  *
+ * Exact covers a tag purge and an exact URL. Prefix covers a wildcard URL and a full pull zone.
+ *
+ * @param string $bucket exact or prefix.
  * @return int
  */
-function bpl_rate_used() {
-	$used = get_transient( 'bpl_rate_' . gmdate( 'YmdHi' ) );
+function bpl_rate_bucket_used( $bucket ) {
+	$bucket = ( 'prefix' === $bucket ) ? 'prefix' : 'exact';
+	$used   = get_transient( 'bpl_rate_' . $bucket . '_' . gmdate( 'YmdHi' ) );
 	return (int) $used;
 }
 
 /**
- * Record calls against the per-minute cap.
+ * Record calls against one Bunny purge type.
  *
- * @param int $count Calls about to be made.
+ * @param string $bucket exact or prefix.
+ * @param int    $count  Calls about to be made.
  * @return void
  */
-function bpl_rate_commit( $count ) {
-	$key  = 'bpl_rate_' . gmdate( 'YmdHi' );
-	$used = bpl_rate_used() + (int) $count;
-	set_transient( $key, $used, 2 * MINUTE_IN_SECONDS );
+function bpl_rate_commit_bucket( $bucket, $count ) {
+	$count = (int) $count;
+	if ( $count < 1 || ! function_exists( 'set_transient' ) ) {
+		return;
+	}
+
+	$bucket = ( 'prefix' === $bucket ) ? 'prefix' : 'exact';
+	$key    = 'bpl_rate_' . $bucket . '_' . gmdate( 'YmdHi' );
+	set_transient( $key, bpl_rate_bucket_used( $bucket ) + $count, 2 * MINUTE_IN_SECONDS );
+}
+
+/**
+ * Split a purge plan into Bunny's exact and prefix call counts.
+ *
+ * @param array{zone?: bool, tags?: string[], urls?: string[]} $plan Purge plan.
+ * @return array{exact: int, prefix: int}
+ */
+function bpl_purge_call_budget( array $plan ) {
+	$exact  = isset( $plan['tags'] ) && is_array( $plan['tags'] ) ? count( $plan['tags'] ) : 0;
+	$prefix = ! empty( $plan['zone'] ) ? 1 : 0;
+	if ( isset( $plan['urls'] ) && is_array( $plan['urls'] ) ) {
+		foreach ( $plan['urls'] as $url ) {
+			if ( false !== strpos( (string) $url, '*' ) ) {
+				++$prefix;
+				continue;
+			}
+			++$exact;
+		}
+	}
+
+	return array(
+		'exact'  => $exact,
+		'prefix' => $prefix,
+	);
+}
+
+/**
+ * Decide whether a batch fits Bunny's exact and prefix limits.
+ *
+ * Exact burst is 120. Prefix burst, including a full pull zone, is 20.
+ * A batch that does not fit becomes one full-zone purge when one prefix call remains.
+ *
+ * @param int $exact_used    Exact calls already made this minute.
+ * @param int $prefix_used   Prefix calls already made this minute.
+ * @param int $exact_needed  Exact calls this batch wants.
+ * @param int $prefix_needed Prefix calls this batch wants.
+ * @param int $exact_cap     Exact burst.
+ * @param int $prefix_cap    Prefix burst.
+ * @return string allow, collapse, block, or skip.
+ */
+function bpl_rate_batch_decision( $exact_used, $prefix_used, $exact_needed, $prefix_needed, $exact_cap = 120, $prefix_cap = 20 ) {
+	$exact_used    = (int) $exact_used;
+	$prefix_used   = (int) $prefix_used;
+	$exact_needed  = (int) $exact_needed;
+	$prefix_needed = (int) $prefix_needed;
+	$exact_cap     = (int) $exact_cap;
+	$prefix_cap    = (int) $prefix_cap;
+	if ( ( $exact_needed + $prefix_needed ) <= 0 ) {
+		return 'skip';
+	}
+	if ( ( $exact_used + $exact_needed ) <= $exact_cap && ( $prefix_used + $prefix_needed ) <= $prefix_cap ) {
+		return 'allow';
+	}
+	if ( ( $exact_needed + $prefix_needed ) > 1 && ( $prefix_used + 1 ) <= $prefix_cap ) {
+		return 'collapse';
+	}
+
+	return 'block';
+}
+
+/**
+ * Status to fold into the admin notice.
+ *
+ * Zero from a finished request means the connection failed. An empty purge
+ * group also uses zero, and that skip is handled by the caller.
+ *
+ * @param int $code HTTP status from bpl_api_request().
+ * @return int
+ */
+function bpl_observed_status( $code ) {
+	$code = (int) $code;
+	if ( 0 === $code ) {
+		return 1;
+	}
+
+	return $code;
 }
 
 /**
@@ -651,7 +738,13 @@ function bpl_flush_purge() {
 		return;
 	}
 
-	$rate = bpl_rate_decision( bpl_rate_used(), $calls );
+	$budget = bpl_purge_call_budget( $plan );
+	$rate   = bpl_rate_batch_decision(
+		bpl_rate_bucket_used( 'exact' ),
+		bpl_rate_bucket_used( 'prefix' ),
+		$budget['exact'],
+		$budget['prefix']
+	);
 	if ( 'collapse' === $rate ) {
 		$plan  = array(
 			'zone'   => true,
@@ -668,7 +761,9 @@ function bpl_flush_purge() {
 		return;
 	}
 
-	bpl_rate_commit( $calls );
+	$budget = bpl_purge_call_budget( $plan );
+	bpl_rate_commit_bucket( 'exact', $budget['exact'] );
+	bpl_rate_commit_bucket( 'prefix', $budget['prefix'] );
 
 	$did_zone  = false;
 	$did_tags  = false;
@@ -677,8 +772,8 @@ function bpl_flush_purge() {
 
 	if ( $plan['zone'] ) {
 		$did_zone = true;
-		$result   = bpl_api_request( 'POST', 'https://api.bunny.net/pullzone/' . $pullzone . '/purgeCache', null, 3, false );
-		$worst    = bpl_worse_status( $worst, $result['code'] );
+		$result   = bpl_api_request( 'POST', 'https://api.bunny.net/pullzone/' . $pullzone . '/purgeCache', '{}', 3, false );
+		$worst    = bpl_worse_status( $worst, bpl_observed_status( $result['code'] ) );
 		bpl_log_add( bpl_log_entry( 'zone', $trigger, 1, $result['code'], bpl_zone_detail( isset( $plan['reason'] ) ? (string) $plan['reason'] : '' ) ) );
 		if ( 401 === $result['code'] ) {
 			bpl_remember_purge_notice( 'unauthorized' );
@@ -692,7 +787,7 @@ function bpl_flush_purge() {
 		foreach ( $plan['tags'] as $tag ) {
 			$body      = bpl_cache_tag_body( $tag );
 			$result    = bpl_api_request( 'POST', 'https://api.bunny.net/pullzone/' . $pullzone . '/purgeCache', $body, 3, false );
-			$tag_worst = bpl_worse_status( $tag_worst, $result['code'] );
+			$tag_worst = bpl_worse_status( $tag_worst, bpl_observed_status( $result['code'] ) );
 			if ( 401 === $result['code'] ) {
 				bpl_log_add( bpl_log_entry( 'tag', $trigger, count( $plan['tags'] ), 401, count( $plan['tags'] ) . ' tags' ) );
 				bpl_remember_purge_notice( 'unauthorized' );
@@ -724,7 +819,8 @@ function bpl_flush_purge() {
 		}
 	}
 
-	bpl_remember_purge_notice( bpl_purge_notice_code( $did_zone, $did_tags, $did_files, $worst ) );
+	$notice_code = bpl_purge_notice_code( $did_zone, $did_tags, $did_files, $worst );
+	bpl_remember_purge_notice( $notice_code );
 }
 
 /**
@@ -743,10 +839,11 @@ function bpl_flush_url_group( array $urls, $kind, $trigger ) {
 	$worst = 200;
 	$paths = array();
 	foreach ( $urls as $url ) {
-		$result  = bpl_api_request( 'POST', 'https://api.bunny.net/purge?async=true&url=' . rawurlencode( $url ), null, 3, false );
+		$request_url = bpl_purge_request_url( $url, $kind );
+		$result      = bpl_api_request( 'POST', $request_url, null, 3, false );
 		$paths[] = bpl_url_path( $url );
 		if ( $result['code'] < 200 || $result['code'] >= 300 ) {
-			$worst = $result['code'];
+			$worst = bpl_observed_status( $result['code'] );
 		}
 		if ( 401 === $result['code'] ) {
 			bpl_log_add( bpl_log_entry( $kind, $trigger, count( $urls ), 401, implode( ', ', array_slice( $paths, 0, 3 ) ) ) );
@@ -852,7 +949,7 @@ function bpl_purge_zone_now( $trigger ) {
 		return 0;
 	}
 
-	$result = bpl_api_request( 'POST', 'https://api.bunny.net/pullzone/' . $pullzone . '/purgeCache', null, 3, false );
+	$result = bpl_api_request( 'POST', 'https://api.bunny.net/pullzone/' . $pullzone . '/purgeCache', '{}', 3, false );
 	$detail = 'Full Pull Zone. Manual purge.';
 	if ( 'first_save' === $trigger ) {
 		$detail = 'Full Pull Zone. First save.';

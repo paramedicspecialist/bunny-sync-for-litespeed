@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'BPL_VERSION' ) ) {
-	define( 'BPL_VERSION', '1.0.0' );
+	define( 'BPL_VERSION', '1.1.1' );
 }
 
 $bpl_root = dirname( __DIR__ );

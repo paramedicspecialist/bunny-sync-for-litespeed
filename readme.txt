@@ -4,9 +4,9 @@ Tags: bunny, litespeed, cache, purge
 Requires at least: 6.8
 Tested up to: 7.1.3
 Requires PHP: 7.4
-Stable tag: 1.1.0
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Stable tag: 1.1.1
+License: GPLv3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 Clears Bunny when LiteSpeed Cache clears a page or the whole site.
 
@@ -55,6 +55,14 @@ A long browser cache time can keep a page after both caches have been cleared. T
 
 A hash cannot be turned back into the key. Every purge sends the original key to Bunny.
 
+= Does a trailing slash clear more than that page? =
+
+No. A page purge sends exactPath, so an address that ends with a slash clears that address. Bunny documents that flag for pull zones that keep query strings in the cache key. A directory purge still uses * and counts as a prefix purge.
+
+= How many purges can run at once? =
+
+Bunny's default burst is 120 exact purges and 20 prefix purges. An exact purge is one tag or one address. A prefix purge is a wildcard or the whole pull zone. A larger batch becomes one full pull zone purge when a prefix call is still available.
+
 = Does a post edit clear the whole site? =
 
 No. The whole pull zone is cleared when LiteSpeed itself sends a purge-all tag, for sitewide Elementor templates, for the Customizer, for a real plugin or theme update, and when one edit would otherwise send more than 40 tag purges. LiteSpeed's "All pages" auto-purge rule is a purge-all tag.
@@ -65,6 +73,9 @@ The newest 50 rows: time, kind, trigger, count, HTTP status, and a short reason 
 
 == Upgrade Notice ==
 
+= 1.1.1 =
+Page purges now clear that exact address, including addresses that end with a slash.
+
 = 1.1.0 =
 Renamed from Bunny Sync for LiteSpeed. Activating this plugin retires the old one and keeps its settings.
 
@@ -72,6 +83,14 @@ Renamed from Bunny Sync for LiteSpeed. Activating this plugin retires the old on
 Page tags now reach Bunny. After updating, run LiteSpeed Cache → Purge All once so cached pages are rebuilt with tags.
 
 == Changelog ==
+
+= 1.1.1 =
+* A page address that ends with a slash is purged as that exact page. Bunny no longer treats it as every address under that path, which on the homepage meant the whole site.
+* The site port is kept when WordPress is not served on port 80 or 443.
+* A failed connection to Bunny is reported as a failed purge.
+* Purge limits follow Bunny's separate exact and prefix limits.
+* A full pull zone purge sends an empty JSON body, which is a purge without a cache tag.
+* Licence is now GPLv3 or later.
 
 = 1.1.0 =
 * Renamed to Purge Sync for Bunny and LiteSpeed. The folder, text domain, and settings page are now purge-sync-for-bunny-litespeed.

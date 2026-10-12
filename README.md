@@ -6,7 +6,7 @@ Bunny sits in front of the site address. LiteSpeed clears its own copy with a he
 
 ## Install
 
-Download `purge-sync-for-bunny-litespeed-1.1.0.zip` from the [latest release](https://github.com/paramedicspecialist/purge-sync-for-bunny-litespeed/releases/latest). In WordPress, open Plugins → Add New → Upload Plugin and choose that zip.
+Download `purge-sync-for-bunny-litespeed-1.1.1.zip` from the [latest release](https://github.com/paramedicspecialist/purge-sync-for-bunny-litespeed/releases/latest). In WordPress, open Plugins → Add New → Upload Plugin and choose that zip.
 
 Then open Settings → Purge Sync and enter the pull zone ID and API key.
 
@@ -20,4 +20,4 @@ Deleting the plugin removes its settings, encrypted API key, purge log, and temp
 
 ## Licence
 
-GPLv2 or later. See `readme.txt`.
+GPLv3 or later, the same licence used by the official bunny.net plugin. See `LICENSE`.
