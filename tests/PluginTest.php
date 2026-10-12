@@ -2,7 +2,7 @@
 /**
  * Pure behaviour tests. No network and no WordPress.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 use PHPUnit\Framework\TestCase;

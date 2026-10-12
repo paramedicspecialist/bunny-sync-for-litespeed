@@ -2,7 +2,7 @@
 /**
  * Listen for LiteSpeed, Elementor, media, Customizer, and update purges.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -522,7 +522,7 @@ function bpl_on_elementor_save( $document, $data = null ) {
 			return;
 		}
 		bpl_mark_zone( 'elementor_library' );
-		do_action( 'litespeed_purge_all', 'Bunny Sync for LiteSpeed - Elementor template' );
+		do_action( 'litespeed_purge_all', 'Purge Sync for Bunny and LiteSpeed - Elementor template' );
 		return;
 	}
 
@@ -550,7 +550,7 @@ function bpl_on_customizer() {
 	}
 
 	bpl_mark_zone( 'customize_save_after' );
-	do_action( 'litespeed_purge_all', 'Bunny Sync for LiteSpeed - Customizer' );
+	do_action( 'litespeed_purge_all', 'Purge Sync for Bunny and LiteSpeed - Customizer' );
 }
 
 /**
@@ -586,7 +586,7 @@ function bpl_on_upgrade( $upgrader, $hook_extra ) {
 	}
 
 	bpl_mark_zone( 'upgrader_process_complete' );
-	do_action( 'litespeed_purge_all', 'Bunny Sync for LiteSpeed - update' );
+	do_action( 'litespeed_purge_all', 'Purge Sync for Bunny and LiteSpeed - update' );
 }
 
 /**

@@ -1,10 +1,10 @@
-=== Bunny Sync for LiteSpeed ===
+=== Purge Sync for Bunny and LiteSpeed ===
 Contributors: paramedicspecialist
 Tags: bunny, litespeed, cache, purge
 Requires at least: 6.8
 Tested up to: 7.1.3
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Clears Bunny when LiteSpeed Cache clears a page or the whole site.
 
 Bunny sits in front of the site address, the same way a reverse proxy does. LiteSpeed Cache clears its own copy with a header the web server consumes. Bunny never sees that header, so visitors can still receive the previous page.
 
-Bunny Sync for LiteSpeed listens for those clears and asks Bunny to drop the same address.
+Purge Sync for Bunny and LiteSpeed listens for those clears and asks Bunny to drop the same address.
 
 * A normal edit purges the LiteSpeed tags for that page, including the homepage and archives that include it.
 * Purge This Page, and a URL typed into LiteSpeed, also purge that exact public address.
@@ -28,8 +28,8 @@ The plugin does not rewrite URLs and can sit beside the official bunny.net plugi
 == Installation ==
 
 1. Upload the plugin folder to `/wp-content/plugins/`.
-2. Activate Bunny Sync for LiteSpeed.
-3. Open Settings → Bunny Sync.
+2. Activate Purge Sync for Bunny and LiteSpeed.
+3. Open Settings → Purge Sync.
 4. Enter the Pull Zone ID and API Key, then save.
 
 Deleting the plugin removes its settings, encrypted API key, purge log, and temporary records. Deactivating it leaves those in place.
@@ -65,10 +65,17 @@ The newest 50 rows: time, kind, trigger, count, HTTP status, and a short reason 
 
 == Upgrade Notice ==
 
+= 1.1.0 =
+Renamed from Bunny Sync for LiteSpeed. Activating this plugin retires the old one and keeps its settings.
+
 = 1.0.1 =
 Page tags now reach Bunny. After updating, run LiteSpeed Cache → Purge All once so cached pages are rebuilt with tags.
 
 == Changelog ==
+
+= 1.1.0 =
+* Renamed to Purge Sync for Bunny and LiteSpeed. The folder, text domain, and settings page are now purge-sync-for-bunny-litespeed.
+* Activating this plugin deactivates Bunny Sync for LiteSpeed 1.0.x and removes its folder. Settings, the encrypted API key, and the purge log are kept, including when the old plugin is deleted from the Plugins screen.
 
 = 1.0.1 =
 * Fixed: the CDN-Tag header was never sent because LiteSpeed adds its cache headers after WordPress's send_headers hook. Tag purges matched nothing at Bunny.

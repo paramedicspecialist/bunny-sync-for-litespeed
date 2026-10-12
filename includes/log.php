@@ -2,7 +2,7 @@
 /**
  * Purge log capped at 50 rows.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 defined( 'ABSPATH' ) || exit;

@@ -2,7 +2,7 @@
 /**
  * CDN-Tag header built from LiteSpeed's public cache tags.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 defined( 'ABSPATH' ) || exit;

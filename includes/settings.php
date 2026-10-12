@@ -2,7 +2,7 @@
 /**
  * Settings screen, credential storage, and zone warnings.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -127,10 +127,10 @@ function bpl_settings_boot() {
  */
 function bpl_register_menu() {
 	add_options_page(
-		__( 'Bunny Sync for LiteSpeed', 'bunny-sync-for-litespeed' ),
-		__( 'Bunny Sync', 'bunny-sync-for-litespeed' ),
+		__( 'Purge Sync for Bunny and LiteSpeed', 'purge-sync-for-bunny-litespeed' ),
+		__( 'Purge Sync', 'purge-sync-for-bunny-litespeed' ),
 		'manage_options',
-		'bunny-sync-for-litespeed',
+		'purge-sync-for-bunny-litespeed',
 		'bpl_render_settings_page'
 	);
 }
@@ -141,7 +141,7 @@ function bpl_register_menu() {
  * @return string
  */
 function bpl_settings_url() {
-	return admin_url( 'options-general.php?page=bunny-sync-for-litespeed' );
+	return admin_url( 'options-general.php?page=purge-sync-for-bunny-litespeed' );
 }
 
 /**
@@ -366,13 +366,13 @@ function bpl_render_purge_banner() {
 	delete_transient( $key );
 
 	$messages = array(
-		'cleared'       => __( 'Bunny cleared its cache for this edit.', 'bunny-sync-for-litespeed' ),
-		'cleared_zone'  => __( 'Bunny cleared the whole pull zone.', 'bunny-sync-for-litespeed' ),
-		'cleared_pages' => __( 'Bunny cleared the cached pages for this edit.', 'bunny-sync-for-litespeed' ),
-		'cleared_files' => __( 'Bunny cleared the updated files.', 'bunny-sync-for-litespeed' ),
-		'failed'        => __( 'Bunny could not clear its cache.', 'bunny-sync-for-litespeed' ),
-		'unauthorized'  => __( 'Bunny refused the API key, so the cache was not cleared.', 'bunny-sync-for-litespeed' ),
-		'capped'        => __( 'Bunny was not cleared. The per-minute purge cap was reached.', 'bunny-sync-for-litespeed' ),
+		'cleared'       => __( 'Bunny cleared its cache for this edit.', 'purge-sync-for-bunny-litespeed' ),
+		'cleared_zone'  => __( 'Bunny cleared the whole pull zone.', 'purge-sync-for-bunny-litespeed' ),
+		'cleared_pages' => __( 'Bunny cleared the cached pages for this edit.', 'purge-sync-for-bunny-litespeed' ),
+		'cleared_files' => __( 'Bunny cleared the updated files.', 'purge-sync-for-bunny-litespeed' ),
+		'failed'        => __( 'Bunny could not clear its cache.', 'purge-sync-for-bunny-litespeed' ),
+		'unauthorized'  => __( 'Bunny refused the API key, so the cache was not cleared.', 'purge-sync-for-bunny-litespeed' ),
+		'capped'        => __( 'Bunny was not cleared. The per-minute purge cap was reached.', 'purge-sync-for-bunny-litespeed' ),
 	);
 	if ( ! isset( $messages[ $code ] ) ) {
 		return;
@@ -387,7 +387,7 @@ function bpl_render_purge_banner() {
 
 	echo '<div class="notice ' . esc_attr( $class ) . ' is-dismissible"><p>' . esc_html( $messages[ $code ] );
 	if ( current_user_can( 'manage_options' ) && in_array( $code, array( 'failed', 'unauthorized', 'capped' ), true ) ) {
-		echo ' <a href="' . esc_url( bpl_settings_url() ) . '">' . esc_html__( 'View the Log', 'bunny-sync-for-litespeed' ) . '</a>';
+		echo ' <a href="' . esc_url( bpl_settings_url() ) . '">' . esc_html__( 'View the Log', 'purge-sync-for-bunny-litespeed' ) . '</a>';
 	}
 	echo '</p></div>';
 }
@@ -407,24 +407,24 @@ function bpl_admin_notices() {
 	}
 
 	if ( get_transient( 'bpl_auth_failed' ) ) {
-		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Bunny refused the API key. Purges are paused until the key is accepted.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Bunny refused the API key. Purges are paused until the key is accepted.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 
 	if ( get_transient( 'bpl_key_unreadable' ) ) {
-		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'The saved key cannot be read. Enter it again. This happens when the WordPress salts change.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'The saved key cannot be read. Enter it again. This happens when the WordPress salts change.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 
 	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-	if ( ! $screen || 'settings_page_bunny-sync-for-litespeed' !== $screen->id ) {
+	if ( ! $screen || 'settings_page_purge-sync-for-bunny-litespeed' !== $screen->id ) {
 		return;
 	}
 
 	if ( ! bpl_encryption_available() && ! ( defined( 'BUNNY_LITESPEED_API_KEY' ) && is_string( BUNNY_LITESPEED_API_KEY ) && '' !== BUNNY_LITESPEED_API_KEY ) ) {
-		echo '<div class="notice notice-error"><p>' . esc_html__( 'OpenSSL with AES-256-GCM is required before a key can be stored.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-error"><p>' . esc_html__( 'OpenSSL with AES-256-GCM is required before a key can be stored.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 
 	if ( bpl_is_configured() && ! class_exists( '\LiteSpeed\Core' ) && ! class_exists( '\LiteSpeed\Purge' ) ) {
-		echo '<div class="notice notice-warning"><p>' . esc_html__( 'LiteSpeed Cache is not active. Automatic purging waits until it is. The button on this screen can still clear Bunny.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-warning"><p>' . esc_html__( 'LiteSpeed Cache is not active. Automatic purging waits until it is. The button on this screen can still clear Bunny.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 }
 
@@ -460,22 +460,22 @@ function bpl_notice_is_error( $code ) {
  */
 function bpl_notice_message( $code ) {
 	$messages = array(
-		'saved'              => __( 'Settings saved.', 'bunny-sync-for-litespeed' ),
-		'warmed'             => __( 'Settings saved, and the pull zone was purged so the next pages can be tagged.', 'bunny-sync-for-litespeed' ),
-		'tested'             => __( 'Connection succeeded.', 'bunny-sync-for-litespeed' ),
-		'purged'             => __( 'The pull zone cache was purged.', 'bunny-sync-for-litespeed' ),
-		'purge_failed'       => __( 'The purge did not finish. See the log for the status.', 'bunny-sync-for-litespeed' ),
-		'cleared'            => __( 'The log was cleared.', 'bunny-sync-for-litespeed' ),
-		'removed'            => __( 'The key was removed from this plugin.', 'bunny-sync-for-litespeed' ),
-		'imported'           => __( 'The key was imported and encrypted. The bunny.net plugin still has its own copy.', 'bunny-sync-for-litespeed' ),
-		'import_missing'     => __( 'The bunny.net plugin does not have a key to import.', 'bunny-sync-for-litespeed' ),
-		'openssl'            => __( 'OpenSSL with AES-256-GCM is required before a key can be stored.', 'bunny-sync-for-litespeed' ),
-		'need_zone'          => __( 'Enter the pull zone ID and an API key first.', 'bunny-sync-for-litespeed' ),
-		'key_locked'         => __( 'The key is set in wp-config.php.', 'bunny-sync-for-litespeed' ),
-		'key_invalid'        => __( 'That key was not accepted.', 'bunny-sync-for-litespeed' ),
-		'key_unauthorized'   => __( 'Bunny refused the API key.', 'bunny-sync-for-litespeed' ),
-		'key_pullzone'       => __( 'That key cannot see this pull zone.', 'bunny-sync-for-litespeed' ),
-		'key_unavailable'    => __( 'Bunny could not be reached. Nothing secret was changed.', 'bunny-sync-for-litespeed' ),
+		'saved'              => __( 'Settings saved.', 'purge-sync-for-bunny-litespeed' ),
+		'warmed'             => __( 'Settings saved, and the pull zone was purged so the next pages can be tagged.', 'purge-sync-for-bunny-litespeed' ),
+		'tested'             => __( 'Connection succeeded.', 'purge-sync-for-bunny-litespeed' ),
+		'purged'             => __( 'The pull zone cache was purged.', 'purge-sync-for-bunny-litespeed' ),
+		'purge_failed'       => __( 'The purge did not finish. See the log for the status.', 'purge-sync-for-bunny-litespeed' ),
+		'cleared'            => __( 'The log was cleared.', 'purge-sync-for-bunny-litespeed' ),
+		'removed'            => __( 'The key was removed from this plugin.', 'purge-sync-for-bunny-litespeed' ),
+		'imported'           => __( 'The key was imported and encrypted. The bunny.net plugin still has its own copy.', 'purge-sync-for-bunny-litespeed' ),
+		'import_missing'     => __( 'The bunny.net plugin does not have a key to import.', 'purge-sync-for-bunny-litespeed' ),
+		'openssl'            => __( 'OpenSSL with AES-256-GCM is required before a key can be stored.', 'purge-sync-for-bunny-litespeed' ),
+		'need_zone'          => __( 'Enter the pull zone ID and an API key first.', 'purge-sync-for-bunny-litespeed' ),
+		'key_locked'         => __( 'The key is set in wp-config.php.', 'purge-sync-for-bunny-litespeed' ),
+		'key_invalid'        => __( 'That key was not accepted.', 'purge-sync-for-bunny-litespeed' ),
+		'key_unauthorized'   => __( 'Bunny refused the API key.', 'purge-sync-for-bunny-litespeed' ),
+		'key_pullzone'       => __( 'That key cannot see this pull zone.', 'purge-sync-for-bunny-litespeed' ),
+		'key_unavailable'    => __( 'Bunny could not be reached. Nothing secret was changed.', 'purge-sync-for-bunny-litespeed' ),
 	);
 
 	if ( ! isset( $messages[ $code ] ) ) {
@@ -513,75 +513,75 @@ function bpl_render_settings_page() {
 	}
 
 	echo '<div class="wrap">';
-	echo '<h1>' . esc_html__( 'Bunny Sync for LiteSpeed', 'bunny-sync-for-litespeed' ) . '</h1>';
-	echo '<p>' . esc_html__( 'Clears Bunny when LiteSpeed Cache clears a page or the whole site.', 'bunny-sync-for-litespeed' ) . '</p>';
+	echo '<h1>' . esc_html__( 'Purge Sync for Bunny and LiteSpeed', 'purge-sync-for-bunny-litespeed' ) . '</h1>';
+	echo '<p>' . esc_html__( 'Clears Bunny when LiteSpeed Cache clears a page or the whole site.', 'purge-sync-for-bunny-litespeed' ) . '</p>';
 
 	bpl_render_mode_description();
 	bpl_render_zone_warnings();
 
 	if ( 'agency' === (string) get_option( 'bunnycdn_wizard_mode', '' ) && ! $has_key ) {
-		echo '<div class="notice notice-warning"><p>' . esc_html__( 'Agency mode in the bunny.net plugin does not store an API key. Paste one here.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-warning"><p>' . esc_html__( 'Agency mode in the bunny.net plugin does not store an API key. Paste one here.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 
 	echo '<form method="post" action="' . esc_url( bpl_settings_url() ) . '" autocomplete="off">';
 	wp_nonce_field( 'bpl_settings' );
 	echo '<table class="form-table" role="presentation"><tbody>';
 
-	echo '<tr><th scope="row">' . esc_html__( 'Enable Bunny Purging', 'bunny-sync-for-litespeed' ) . '</th><td>';
+	echo '<tr><th scope="row">' . esc_html__( 'Enable Bunny Purging', 'purge-sync-for-bunny-litespeed' ) . '</th><td>';
 	echo '<label><input type="checkbox" name="bpl_enabled" value="1" ' . checked( 1, (int) $settings['enabled'], false ) . ' /> ';
-	echo esc_html__( 'Purge Bunny When LiteSpeed Clears Cache', 'bunny-sync-for-litespeed' ) . '</label></td></tr>';
+	echo esc_html__( 'Purge Bunny When LiteSpeed Clears Cache', 'purge-sync-for-bunny-litespeed' ) . '</label></td></tr>';
 
-	echo '<tr><th scope="row"><label for="bpl_pullzone_id">' . esc_html__( 'Pull Zone ID', 'bunny-sync-for-litespeed' ) . '</label></th><td>';
+	echo '<tr><th scope="row"><label for="bpl_pullzone_id">' . esc_html__( 'Pull Zone ID', 'purge-sync-for-bunny-litespeed' ) . '</label></th><td>';
 	echo '<input name="bpl_pullzone_id" id="bpl_pullzone_id" type="number" min="1" step="1" class="regular-text" value="' . esc_attr( (string) $zone_id ) . '" />';
 	if ( bpl_suggested_pullzone_id() > 0 ) {
-		echo '<p class="description">' . esc_html__( 'Suggested from the bunny.net plugin when this field was empty.', 'bunny-sync-for-litespeed' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Suggested from the bunny.net plugin when this field was empty.', 'purge-sync-for-bunny-litespeed' ) . '</p>';
 	}
 	echo '</td></tr>';
 
-	echo '<tr><th scope="row"><label for="bpl_api_key">' . esc_html__( 'API Key', 'bunny-sync-for-litespeed' ) . '</label></th><td>';
+	echo '<tr><th scope="row"><label for="bpl_api_key">' . esc_html__( 'API Key', 'purge-sync-for-bunny-litespeed' ) . '</label></th><td>';
 	if ( $key_locked ) {
 		echo '<input type="password" class="regular-text" value="" disabled="disabled" autocomplete="off" />';
-		echo '<p class="description">' . esc_html__( 'The key is set in wp-config.php.', 'bunny-sync-for-litespeed' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'The key is set in wp-config.php.', 'purge-sync-for-bunny-litespeed' ) . '</p>';
 	} else {
 		echo '<input name="bpl_api_key" id="bpl_api_key" type="password" class="regular-text" value="" autocomplete="off" />';
-		echo '<p class="description">' . esc_html__( 'Leave the field blank to keep the saved key. The key is encrypted before it is stored.', 'bunny-sync-for-litespeed' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Leave the field blank to keep the saved key. The key is encrypted before it is stored.', 'purge-sync-for-bunny-litespeed' ) . '</p>';
 	}
 	if ( $has_key ) {
-		echo '<p>' . esc_html__( 'A key is saved.', 'bunny-sync-for-litespeed' );
+		echo '<p>' . esc_html__( 'A key is saved.', 'purge-sync-for-bunny-litespeed' );
 		if ( '' !== $fingerprint ) {
-			echo ' ' . esc_html__( 'Fingerprint:', 'bunny-sync-for-litespeed' ) . ' <code>' . esc_html( $fingerprint ) . '</code>';
+			echo ' ' . esc_html__( 'Fingerprint:', 'purge-sync-for-bunny-litespeed' ) . ' <code>' . esc_html( $fingerprint ) . '</code>';
 		}
 		echo '</p>';
 	}
 	echo '</td></tr>';
 
-	echo '<tr><th scope="row">' . esc_html__( 'Also Purge the Whole Zone', 'bunny-sync-for-litespeed' ) . '</th><td>';
+	echo '<tr><th scope="row">' . esc_html__( 'Also Purge the Whole Zone', 'purge-sync-for-bunny-litespeed' ) . '</th><td>';
 	echo '<label><input type="checkbox" name="bpl_purge_elementor_library" value="1" ' . checked( 1, (int) $settings['purge_elementor_library'], false ) . ' /> ';
-	echo esc_html__( 'When a Published Elementor Header, Footer, Kit, or Other Sitewide Template Is Saved', 'bunny-sync-for-litespeed' ) . '</label><br />';
+	echo esc_html__( 'When a Published Elementor Header, Footer, Kit, or Other Sitewide Template Is Saved', 'purge-sync-for-bunny-litespeed' ) . '</label><br />';
 	echo '<label><input type="checkbox" name="bpl_purge_customizer" value="1" ' . checked( 1, (int) $settings['purge_customizer'], false ) . ' /> ';
-	echo esc_html__( 'When the Customizer Is Saved', 'bunny-sync-for-litespeed' ) . '</label><br />';
+	echo esc_html__( 'When the Customizer Is Saved', 'purge-sync-for-bunny-litespeed' ) . '</label><br />';
 	echo '<label><input type="checkbox" name="bpl_purge_upgrades" value="1" ' . checked( 1, (int) $settings['purge_upgrades'], false ) . ' /> ';
-	echo esc_html__( 'When a Plugin or Theme Update Finishes', 'bunny-sync-for-litespeed' ) . '</label>';
+	echo esc_html__( 'When a Plugin or Theme Update Finishes', 'purge-sync-for-bunny-litespeed' ) . '</label>';
 	echo '</td></tr>';
 
 	echo '</tbody></table>';
 	echo '<p>';
-	echo '<button type="submit" name="bpl_action" value="save" class="button button-primary">' . esc_html__( 'Save Settings', 'bunny-sync-for-litespeed' ) . '</button> ';
-	echo '<button type="submit" name="bpl_action" value="test" class="button">' . esc_html__( 'Test Connection', 'bunny-sync-for-litespeed' ) . '</button> ';
-	echo '<button type="submit" name="bpl_action" value="purge" class="button">' . esc_html__( 'Purge Bunny Now', 'bunny-sync-for-litespeed' ) . '</button>';
+	echo '<button type="submit" name="bpl_action" value="save" class="button button-primary">' . esc_html__( 'Save Settings', 'purge-sync-for-bunny-litespeed' ) . '</button> ';
+	echo '<button type="submit" name="bpl_action" value="test" class="button">' . esc_html__( 'Test Connection', 'purge-sync-for-bunny-litespeed' ) . '</button> ';
+	echo '<button type="submit" name="bpl_action" value="purge" class="button">' . esc_html__( 'Purge Bunny Now', 'purge-sync-for-bunny-litespeed' ) . '</button>';
 	echo '</p>';
 
 	if ( ! $has_key && '' !== $official && ! $key_locked ) {
-		echo '<p><button type="submit" name="bpl_action" value="import" class="button">' . esc_html__( 'Import Key from bunny.net', 'bunny-sync-for-litespeed' ) . '</button></p>';
+		echo '<p><button type="submit" name="bpl_action" value="import" class="button">' . esc_html__( 'Import Key from bunny.net', 'purge-sync-for-bunny-litespeed' ) . '</button></p>';
 	}
 	if ( $has_key && ! $key_locked ) {
-		echo '<p><button type="submit" name="bpl_action" value="remove_key" class="button">' . esc_html__( 'Remove Saved Key', 'bunny-sync-for-litespeed' ) . '</button></p>';
+		echo '<p><button type="submit" name="bpl_action" value="remove_key" class="button">' . esc_html__( 'Remove Saved Key', 'purge-sync-for-bunny-litespeed' ) . '</button></p>';
 	}
 
-	echo '<h2>' . esc_html__( 'Purge Log', 'bunny-sync-for-litespeed' ) . '</h2>';
-	echo '<p>' . esc_html__( 'Newest 50 purge records. Older rows are dropped automatically.', 'bunny-sync-for-litespeed' ) . '</p>';
+	echo '<h2>' . esc_html__( 'Purge Log', 'purge-sync-for-bunny-litespeed' ) . '</h2>';
+	echo '<p>' . esc_html__( 'Newest 50 purge records. Older rows are dropped automatically.', 'purge-sync-for-bunny-litespeed' ) . '</p>';
 	bpl_render_log();
-	echo '<p><button type="submit" name="bpl_action" value="clear_log" class="button">' . esc_html__( 'Clear Log', 'bunny-sync-for-litespeed' ) . '</button></p>';
+	echo '<p><button type="submit" name="bpl_action" value="clear_log" class="button">' . esc_html__( 'Clear Log', 'purge-sync-for-bunny-litespeed' ) . '</button></p>';
 	echo '</form></div>';
 }
 
@@ -591,7 +591,7 @@ function bpl_render_settings_page() {
  * @return void
  */
 function bpl_render_mode_description() {
-	echo '<p>' . esc_html__( 'Bunny sits in front of this site’s own address, the same way a reverse proxy does. A LiteSpeed purge of a page or the whole site clears that same address at Bunny.', 'bunny-sync-for-litespeed' ) . '</p>';
+	echo '<p>' . esc_html__( 'Bunny sits in front of this site’s own address, the same way a reverse proxy does. A LiteSpeed purge of a page or the whole site clears that same address at Bunny.', 'purge-sync-for-bunny-litespeed' ) . '</p>';
 }
 
 /**
@@ -606,19 +606,19 @@ function bpl_render_zone_warnings() {
 	}
 
 	if ( ! empty( $flags['perma_cache'] ) ) {
-		echo '<div class="notice notice-warning"><p>' . esc_html__( 'Perma-Cache is turned on. Tag purges do not apply, and a full purge can leave the previous Perma-Cache directory in place.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-warning"><p>' . esc_html__( 'Perma-Cache is turned on. Tag purges do not apply, and a full purge can leave the previous Perma-Cache directory in place.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 	if ( ! empty( $flags['cookie_vary_sensitive'] ) ) {
-		echo '<div class="notice notice-warning"><p>' . esc_html__( 'This pull zone varies the cache by a login or comment cookie. Personalized pages can be stored at the edge. Bypass those cookies in the Bunny dashboard.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-warning"><p>' . esc_html__( 'This pull zone varies the cache by a login or comment cookie. Personalized pages can be stored at the edge. Bypass those cookies in the Bunny dashboard.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 	if ( empty( $flags['ignore_query_strings'] ) ) {
-		echo '<div class="notice notice-info"><p>' . esc_html__( 'Query strings are part of the cache key. File purges clear every version of the file. Those purges count against Bunny\'s stricter limit.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-info"><p>' . esc_html__( 'Query strings are part of the cache key. File purges clear every version of the file. Those purges count against Bunny\'s stricter limit.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 	if ( ! empty( $flags['smart_cache'] ) ) {
-		echo '<div class="notice notice-info"><p>' . esc_html__( 'Smart Cache is on. Bunny skips HTML unless an edge rule caches it. Tags still apply to HTML that is cached.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-info"><p>' . esc_html__( 'Smart Cache is on. Bunny skips HTML unless an edge rule caches it. Tags still apply to HTML that is cached.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 	if ( isset( $flags['browser_max_age'] ) && (int) $flags['browser_max_age'] > 300 ) {
-		echo '<div class="notice notice-info"><p>' . esc_html__( 'The browser cache time is long enough that a visitor can keep a page after both caches are cleared.', 'bunny-sync-for-litespeed' ) . '</p></div>';
+		echo '<div class="notice notice-info"><p>' . esc_html__( 'The browser cache time is long enough that a visitor can keep a page after both caches are cleared.', 'purge-sync-for-bunny-litespeed' ) . '</p></div>';
 	}
 }
 
@@ -630,18 +630,18 @@ function bpl_render_zone_warnings() {
 function bpl_render_log() {
 	$entries = bpl_log_entries();
 	if ( array() === $entries ) {
-		echo '<p>' . esc_html__( 'No purge records yet.', 'bunny-sync-for-litespeed' ) . '</p>';
+		echo '<p>' . esc_html__( 'No purge records yet.', 'purge-sync-for-bunny-litespeed' ) . '</p>';
 		return;
 	}
 
 	echo '<table class="widefat striped"><thead><tr>';
 	$columns = array(
-		__( 'Time (UTC)', 'bunny-sync-for-litespeed' ),
-		__( 'Kind', 'bunny-sync-for-litespeed' ),
-		__( 'Trigger', 'bunny-sync-for-litespeed' ),
-		__( 'Count', 'bunny-sync-for-litespeed' ),
-		__( 'Status', 'bunny-sync-for-litespeed' ),
-		__( 'Detail', 'bunny-sync-for-litespeed' ),
+		__( 'Time (UTC)', 'purge-sync-for-bunny-litespeed' ),
+		__( 'Kind', 'purge-sync-for-bunny-litespeed' ),
+		__( 'Trigger', 'purge-sync-for-bunny-litespeed' ),
+		__( 'Count', 'purge-sync-for-bunny-litespeed' ),
+		__( 'Status', 'purge-sync-for-bunny-litespeed' ),
+		__( 'Detail', 'purge-sync-for-bunny-litespeed' ),
 	);
 	foreach ( $columns as $column ) {
 		echo '<th scope="col">' . esc_html( $column ) . '</th>';
@@ -656,10 +656,10 @@ function bpl_render_log() {
 		echo '<td>' . esc_html( isset( $entry['time'] ) ? (string) $entry['time'] : '' ) . '</td>';
 		$kind = isset( $entry['kind'] ) ? (string) $entry['kind'] : '';
 		$kind_labels = array(
-			'tag'    => __( 'Tag', 'bunny-sync-for-litespeed' ),
-			'url'    => __( 'URL', 'bunny-sync-for-litespeed' ),
-			'zone'   => __( 'Zone', 'bunny-sync-for-litespeed' ),
-			'prefix' => __( 'Prefix', 'bunny-sync-for-litespeed' ),
+			'tag'    => __( 'Tag', 'purge-sync-for-bunny-litespeed' ),
+			'url'    => __( 'URL', 'purge-sync-for-bunny-litespeed' ),
+			'zone'   => __( 'Zone', 'purge-sync-for-bunny-litespeed' ),
+			'prefix' => __( 'Prefix', 'purge-sync-for-bunny-litespeed' ),
 		);
 		echo '<td>' . esc_html( isset( $kind_labels[ $kind ] ) ? $kind_labels[ $kind ] : $kind ) . '</td>';
 		echo '<td>' . esc_html( isset( $entry['trigger'] ) ? (string) $entry['trigger'] : '' ) . '</td>';

@@ -2,7 +2,7 @@
 /**
  * Load the plugin libraries without WordPress.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

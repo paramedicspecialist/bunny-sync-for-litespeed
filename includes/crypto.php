@@ -2,7 +2,7 @@
 /**
  * Encrypt the Bunny API key so a database copy is not the key itself.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 defined( 'ABSPATH' ) || exit;

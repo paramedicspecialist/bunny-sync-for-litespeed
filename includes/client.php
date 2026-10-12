@@ -2,7 +2,7 @@
 /**
  * Bunny API calls, URL allowlist, and pull-zone flag parsing.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -486,7 +486,7 @@ function bpl_api_request( $method, $url, $body = null, $retries = 3, $keep_body 
 	$headers    = array(
 		'AccessKey'  => $key,
 		'Accept'     => 'application/json',
-		'User-Agent' => 'bunny-litespeed-purge/' . BPL_VERSION . ' WP/' . $wp_version . ' PHP/' . PHP_VERSION,
+		'User-Agent' => 'purge-sync-for-bunny-litespeed/' . BPL_VERSION . ' WP/' . $wp_version . ' PHP/' . PHP_VERSION,
 	);
 	if ( is_string( $body ) ) {
 		$headers['Content-Type'] = 'application/json';

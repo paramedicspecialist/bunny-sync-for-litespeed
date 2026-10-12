@@ -2,7 +2,7 @@
 /**
  * Remove stored secrets and records when the plugin is deleted.
  *
- * @package BunnyPurgeLiteSpeed
+ * @package PurgeSyncBunnyLiteSpeed
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
